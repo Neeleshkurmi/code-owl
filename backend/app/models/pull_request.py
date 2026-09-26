@@ -54,6 +54,11 @@ class PullRequest(Base):
         nullable=False,
     )
 
+    diff : Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         default=datetime.utcnow,
@@ -70,3 +75,8 @@ class PullRequest(Base):
     repository: Mapped["Repository"] = relationship(
         back_populates="pull_requests",
     )
+
+    reviews: Mapped[list["Review"]] = relationship(
+        back_populates="pull_request",
+        cascade="all, delete-orphan",
+    )   

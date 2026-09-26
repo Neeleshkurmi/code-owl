@@ -10,6 +10,7 @@ class PullRequestResponse(BaseModel):
     html_url: str
     base_branch: str
     head_branch: str
+    diff: str | None
 
     model_config = {
         "from_attributes": True,

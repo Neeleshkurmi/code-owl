@@ -6,6 +6,10 @@ from sqlalchemy import pool
 from app.db.database import Base
 from app.models.repository import Repository
 from app.models.pull_request import PullRequest
+from app.models.repository import Repository
+from app.models.pull_request import PullRequest
+from app.models.review import Review
+from app.models.review_findings import ReviewFinding
 
 from alembic import context
 

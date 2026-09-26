@@ -9,6 +9,10 @@ class Settings(BaseSettings) :
     debug : bool
     database_url : str
     github_webhook_secret : str
+    github_api_url : str = "https://api.github.com"
+    github_token : str
+    openai_api_key : str
+    openai_base_url : str
 
     model_config = SettingsConfigDict(
         env_file=Path(__file__).resolve().parent / "../../.env",
