@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.review import Review
-from app.models.review_finding import ReviewFinding
+from app.models.review_findings import ReviewFinding
 
 
 class ReviewRepository:
