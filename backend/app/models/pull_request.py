@@ -80,3 +80,8 @@ class PullRequest(Base):
         back_populates="pull_request",
         cascade="all, delete-orphan",
     )   
+
+    review_runs : Mapped[list["ReviewRun"]] = relationship(
+        back_populates="pull_request",
+        cascade="all, delete-orphan",
+    )

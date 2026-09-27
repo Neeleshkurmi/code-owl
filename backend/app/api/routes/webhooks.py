@@ -8,6 +8,12 @@ from app.repositories.repository_repository import RepositoryRepository
 from app.schemas.github import GitHubPullRequestEvent
 from app.services.pull_request_service import PullRequestService
 from app.core.github_client import GitHubClient
+from app.repositories.review_repository import ReviewRepository
+from app.services.code_review_service import CodeReviewService
+from app.services.review_service import ReviewService
+from app.repositories.review_run_repository import ReviewRunRepository
+from app.services.review_run_service import ReviewRunService
+from app.services.review_job_service import ReviewJobService
 
 
 
@@ -21,6 +27,18 @@ pull_request_service = PullRequestService(
     repository_repository=RepositoryRepository(),
     github_client=GitHubClient(),
 )
+
+code_review_service = CodeReviewService()
+
+review_service = ReviewService(
+    review_repository=ReviewRepository(),
+)
+
+review_run_service = ReviewRunService(
+    repository=ReviewRunRepository(),
+)
+
+review_job_service = ReviewJobService()
 
 @router.post("/github")
 async def github_webhook(
@@ -72,10 +90,32 @@ async def github_webhook(
             "action": event.action,
         }
 
-    return {
+    if not pull_request.diff : 
+        return {
+            "received" : True, 
+            "processed" : False,
+            "action" : event.action,
+            "reason" : "Pull request has no diff",
+        }
+
+    review_run = await review_run_service.create_run(
+        db=db,
+        pull_request_id=pull_request.id,
+        commit_sha=event.pull_request.head.sha,
+    )
+
+    await review_job_service.enqueue(
+        review_run_id=review_run.id,
+    )
+
+    response =  {
         "received": True,
         "processed": True,
         "action": event.action,
         "pull_request_id": pull_request.id,
-        "github_pr_id": pull_request.github_pr_id,
+        "review_run_id" : review_run.id,
     }
+
+    print(response)
+
+    return response

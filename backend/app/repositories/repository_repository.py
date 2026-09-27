@@ -1,7 +1,6 @@
-from unittest import result
-
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import IntegrityError
 
 from app.models.repository import Repository
 
@@ -38,8 +37,55 @@ class RepositoryRepository:
 
         result = await db.execute(
             select(Repository).where(
-                Repository.id == repository_id
+                Repository.github_repo_id == repository_id
             )
         )
 
         return result.scalar_one_or_none()
+
+    async def get_or_create(
+    self,
+    db: AsyncSession,
+    github_repo_id: int,
+    name: str,
+    full_name: str,
+    owner: str,
+    url: str,
+) -> Repository:
+
+        existing = await self.get_by_github_id(
+            db,
+            github_repo_id,
+        )
+
+        if existing is not None:
+            return existing
+
+        repository = Repository(
+            github_repo_id=github_repo_id,
+            name=name,
+            full_name=full_name,
+            owner=owner,
+            url=url,
+        )
+
+        try:
+            async with db.begin_nested():
+                db.add(repository)
+                await db.flush()
+
+        except IntegrityError:
+            existing = await self.get_by_github_id(
+                db,
+                github_repo_id,
+            )
+
+            if existing is None:
+                raise
+
+            return existing
+
+        await db.commit()
+        await db.refresh(repository)
+
+        return repository

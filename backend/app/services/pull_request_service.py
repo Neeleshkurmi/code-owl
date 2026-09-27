@@ -44,26 +44,14 @@ class PullRequestService:
             pull_request_number=github_pr.number,
         )
 
-        repository = await self.repository_repository.get_by_github_id(
-            db,
-            github_repository.id,
+        repository = await self.repository_repository.get_or_create(
+            db=db,
+            github_repo_id=github_repository.id,
+            name=github_repository.name,
+            full_name=github_repository.full_name,
+            owner=github_repository.owner.login,
+            url=github_repository.html_url,
         )
-
-        if repository is None:
-
-            from app.models.repository import Repository
-
-            repository = Repository(
-                github_repo_id=github_repository.id,
-                name=github_repository.name,
-                full_name=github_repository.full_name,
-                owner=github_repository.owner.login,
-                url=github_repository.html_url,
-            )
-
-            db.add(repository)
-
-            await db.flush()
 
         existing_pr = await self.pull_request_repository.get_by_github_id(
             db,

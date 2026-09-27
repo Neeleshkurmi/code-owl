@@ -15,6 +15,7 @@ class GitHubRepositoryPayload(BaseModel):
 
 class GitHubBranchPayload(BaseModel):
     ref: str
+    sha : str
 
 
 class GitHubPullRequestPayload(BaseModel):

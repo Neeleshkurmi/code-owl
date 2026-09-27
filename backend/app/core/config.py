@@ -13,6 +13,7 @@ class Settings(BaseSettings) :
     github_token : str
     openai_api_key : str
     openai_base_url : str
+    redis_url : str
 
     model_config = SettingsConfigDict(
         env_file=Path(__file__).resolve().parent / "../../.env",
