@@ -1,4 +1,5 @@
 import json
+from backend.app.services import review_job_service
 import redis.exceptions
 import asyncio
 
@@ -12,10 +13,10 @@ from app.repositories.review_run_repository import ReviewRunRepository
 from app.services.code_review_service import CodeReviewService
 from app.services.review_run_service import ReviewRunService
 from app.services.review_service import ReviewService
+from app.services.review_job_service import ReviewJobService
 
 
-QUEUE_NAME = "review_jobs"
-
+review_job_service = ReviewJobService()
 
 review_run_repository = ReviewRunRepository()
 pull_request_repository = PullRequestRepository()
@@ -59,12 +60,12 @@ async def process_review_run(
         )
         return
 
-    await review_run_service.mark_running(
-        db,
-        review_run,
-    )
 
     try:
+        await review_run_service.mark_running(
+            db,
+            review_run,
+        )
 
         if not pull_request.diff:
             raise ValueError(
@@ -106,42 +107,55 @@ async def process_review_run(
         )
 
 async def worker():
+
     print("Review worker started")
 
     while True:
-        try:
-            # 1. Wait for a job up to 5 seconds
-            result = await redis_client.blpop(
-                QUEUE_NAME,
-                timeout=5,
-            )
 
-            # 2. If result is None (timeout reached without data), loop again
-            if not result:
+        try:
+
+            raw_job = await review_job_service.claim()
+
+            if raw_job is None:
                 continue
 
-            # 3. Process the job if data exists
-            _, raw_job = result
             job = json.loads(raw_job)
+
             review_run_id = job["review_run_id"]
 
-            print(f"Processing ReviewRun {review_run_id}")
+            print(
+                f"Processing ReviewRun {review_run_id}"
+            )
 
             async with AsyncSessionLocal() as db:
+
                 await process_review_run(
                     db,
                     review_run_id,
                 )
 
-        except redis.exceptions.TimeoutError:
-            # Normal behavior: Redis timed out waiting for a message. Just keep listening.
-            print("Queue empty, waiting for jobs...")
-            continue
-            
-        except Exception as e:
-            # Protects the loop: Prevents the entire worker from crashing on unexpected errors
-            print(f"Unexpected error in worker loop: {e}")
-            await asyncio.sleep(2)  # Avoid a tight CPU loop if the database or Redis goes down
+            await review_job_service.acknowledge(
+                raw_job,
+            )
 
+            print(
+                f"ReviewRun {review_run_id} acknowledged"
+            )
+
+        except redis.exceptions.RedisError as error:
+
+            print(
+                f"Redis error: {error}"
+            )
+
+            await asyncio.sleep(2)
+
+        except Exception as error:
+
+            print(
+                f"Unexpected worker error: {error}"
+            )
+
+            await asyncio.sleep(2)
 if __name__ == "__main__":
     asyncio.run(worker())
