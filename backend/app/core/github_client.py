@@ -41,3 +41,43 @@ class GitHubClient :
         response.raise_for_status()
 
         return response.text
+
+    async def create_pull_request_review(
+        self,
+        owner: str,
+        repo: str,
+        pull_request_number: int,
+        commit_sha: str,
+        body: str,
+        comments: list[dict] | None,
+    ) -> dict:
+
+        url = (
+            f"{self.base_url}/repos/"
+            f"{owner}/{repo}/pulls/{pull_request_number}/reviews"
+        )
+
+        payload = {
+            "commit_id": commit_sha,
+            "body": body,
+            "event": "COMMENT",
+        }
+
+        if comments :
+            payload["comments"] = comments
+
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                url,
+                headers=self.headers,
+                json=payload,
+            )
+
+        if response.is_error:
+            print("GitHub API error:")
+            print(f"Status: {response.status_code}")
+            print(f"Response: {response.text}")
+
+        response.raise_for_status()
+
+        return response.json()

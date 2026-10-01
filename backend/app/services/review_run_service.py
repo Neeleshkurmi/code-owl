@@ -5,7 +5,6 @@ from sqlalchemy.exc import IntegrityError
 
 from app.models.review_run import ReviewRun
 from app.repositories.review_run_repository import ReviewRunRepository
-from tkinter.tix import STATUS
 
 
 class ReviewRunService : 
@@ -97,6 +96,21 @@ class ReviewRunService :
         review_run.status = "FAILED"
         review_run.error_message = error_message
         review_run.completed_at = datetime.utcnow()
+
+        await db.commit()
+        await db.refresh(review_run)
+
+        return review_run
+
+    async def reset_to_pending(
+        self,
+        db: AsyncSession,
+        review_run: ReviewRun,
+    ) -> ReviewRun:
+
+        review_run.status = "PENDING"
+        review_run.started_at = None
+        review_run.error_message = None
 
         await db.commit()
         await db.refresh(review_run)

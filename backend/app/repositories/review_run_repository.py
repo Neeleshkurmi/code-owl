@@ -1,4 +1,4 @@
-from unittest import result
+from datetime import datetime, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -49,3 +49,17 @@ class ReviewRunRepository:
         )
 
         return result.scalar_one_or_none()
+    async def get_stale_running_runs(
+        self,
+        db: AsyncSession,
+        stale_before: datetime,
+    ) -> list[ReviewRun]:
+
+        result = await db.execute(
+            select(ReviewRun).where(
+                ReviewRun.status == "RUNNING",
+                ReviewRun.started_at < stale_before,
+            )
+        )
+
+        return list(result.scalars().all())

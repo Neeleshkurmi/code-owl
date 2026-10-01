@@ -29,19 +29,22 @@ class RepositoryRepository:
 
         return list(result.scalars().all())
 
-    async def get_by_github_id(
-            self,
-            db : AsyncSession,
-            repository_id : int,
-    ) -> Repository | None : 
 
+    async def get_by_id(self, db, repository_id):
         result = await db.execute(
             select(Repository).where(
-                Repository.github_repo_id == repository_id
+                Repository.id == repository_id
             )
         )
-
         return result.scalar_one_or_none()
+
+    async def get_by_github_repo_id(self, db, repository_id):
+            result = await db.execute(
+                select(Repository).where(
+                    Repository.github_repo_id == repository_id
+                )
+            )
+            return result.scalar_one_or_none()
 
     async def get_or_create(
     self,
@@ -53,7 +56,7 @@ class RepositoryRepository:
     url: str,
 ) -> Repository:
 
-        existing = await self.get_by_github_id(
+        existing = await self.get_by_github_repo_id(
             db,
             github_repo_id,
         )
@@ -75,7 +78,7 @@ class RepositoryRepository:
                 await db.flush()
 
         except IntegrityError:
-            existing = await self.get_by_github_id(
+            existing = await self.get_by_github_repo_id(
                 db,
                 github_repo_id,
             )
@@ -89,3 +92,5 @@ class RepositoryRepository:
         await db.refresh(repository)
 
         return repository
+
+    

@@ -53,7 +53,7 @@ class PullRequestService:
             url=github_repository.html_url,
         )
 
-        existing_pr = await self.pull_request_repository.get_by_github_id(
+        existing_pr = await self.pull_request_repository.get_by_github_pr_id(
             db,
             github_pr.id,
         )

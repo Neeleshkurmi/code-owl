@@ -37,10 +37,18 @@ Do not report:
 
 For every real issue, provide:
 - severity: low, medium, or high
-- file
-- line number if identifiable
+- file: the exact file path from the provided diff
+- line: the exact NEW-file line number of a changed line in the diff
 - clear explanation
 - concrete suggestion
+
+IMPORTANT RULES FOR file AND line:
+- Only use files that actually appear in the provided diff.
+- Only report a line that was added or modified in the provided diff.
+- The line must be a NEW-file line number shown by the @@ hunk header.
+- Never invent a file path.
+- Never invent a line number.
+- If you cannot confidently map the issue to an added or modified line, set line to null.
 
 If there are no meaningful issues, return an empty findings list.
 

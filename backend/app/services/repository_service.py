@@ -21,7 +21,7 @@ class RepositoryService :
     ) -> Repository : 
 
         existing_repository = (
-            await self.repository_repository.get_by_github_id(
+            await self.repository_repository.get_by_id(
                 db,
                 repository_data.github_repo_id,
             )
@@ -58,7 +58,7 @@ class RepositoryService :
             repository_id : int,
     ) -> Repository | None : 
 
-        return await self.repository_repository.get_by_github_id(
+        return await self.repository_repository.get_by_id(
             db,
             repository_id
         )
