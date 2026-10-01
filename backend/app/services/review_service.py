@@ -18,11 +18,13 @@ class ReviewService:
         self,
         db: AsyncSession,
         pull_request_id: int,
+        review_run_id : int,
         review_result: ReviewResult,
     ) -> Review:
 
         review = Review(
             pull_request_id=pull_request_id,
+            review_run_id=review_run_id,
             summary=review_result.summary,
         )
 

@@ -19,6 +19,11 @@ class Review(Base):
         nullable=False,
     )
 
+    review_run_id : Mapped[int] = mapped_column(
+        ForeignKey("review_runs.id"),
+        nullable=False,
+    )
+
     summary: Mapped[str] = mapped_column(
         Text,
         nullable=False,
@@ -31,6 +36,10 @@ class Review(Base):
     )
 
     pull_request: Mapped["PullRequest"] = relationship(
+        back_populates="reviews",
+    )
+
+    review_run : Mapped["ReviewRun"] = relationship(
         back_populates="reviews",
     )
 

@@ -1,9 +1,11 @@
 from datetime import datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import IntegrityError
 
 from app.models.review_run import ReviewRun
 from app.repositories.review_run_repository import ReviewRunRepository
+from tkinter.tix import STATUS
 
 
 class ReviewRunService : 
@@ -19,18 +21,44 @@ class ReviewRunService :
             db : AsyncSession, 
             pull_request_id : int, 
             commit_sha : str,
-    ) -> ReviewRun :
+    ) -> tuple[ReviewRun, bool] :
+
+        existing_run = await self.repository.get_by_pull_request_and_commit(
+            db,
+            pull_request_id,
+            commit_sha,
+        )
+
+        if existing_run is not None :
+            return existing_run, False
 
         review_run = ReviewRun(
-            pull_request_id=pull_request_id,
-            commit_sha=commit_sha,
+            pull_request_id = pull_request_id,
+            commit_sha = commit_sha,
             status="PENDING",
         )
 
-        return await self.repository.create(
-            db, 
-            review_run,
-        )
+        try :
+            created_run = await self.repository.create(
+                db,
+                review_run,
+            )
+
+            return created_run, True
+        except IntegrityError :
+            await db.rollback()
+
+            existing_run = await self.repository.get_by_pull_request_and_commit(
+                db,
+                pull_request_id,
+                commit_sha,
+            )
+
+            if existing_run is None :
+                raise
+
+            return existing_run, False
+        
 
     async def mark_running(
             self,
@@ -55,7 +83,7 @@ class ReviewRunService :
         review_run.completed_at = datetime.utcnow()
 
         await db.commit()
-        await db.refresh()
+        await db.refresh(review_run)
 
         return review_run
 

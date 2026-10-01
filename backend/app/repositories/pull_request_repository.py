@@ -6,7 +6,7 @@ from app.models.pull_request import PullRequest
 
 class PullRequestRepository:
 
-    async def get_by_github_id(
+    async def get_by_id(
         self,
         db: AsyncSession,
         github_pr_id: int,

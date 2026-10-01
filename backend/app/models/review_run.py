@@ -1,6 +1,7 @@
 from datetime import datetime
+from turtle import back
 
-from sqlalchemy import DateTime, ForeignKey, String
+from sqlalchemy import DateTime, ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.database import Base
@@ -8,6 +9,14 @@ from app.db.database import Base
 
 class ReviewRun(Base) :
     __tablename__ = "review_runs"
+
+    __table_args__ = (
+        UniqueConstraint(
+            "pull_request_id",
+            "commit_sha",
+            name= "uq_review_runs_pull_request_commit",
+        ),
+    )
 
     id : Mapped[int] = mapped_column(
         primary_key=True,
@@ -35,7 +44,7 @@ class ReviewRun(Base) :
         nullable=True,
     )
 
-    completed_at : Mapped[str | None] = mapped_column(
+    completed_at : Mapped[datetime | None] = mapped_column(
         DateTime,
         nullable=True,
     )
@@ -47,4 +56,9 @@ class ReviewRun(Base) :
 
     pull_request : Mapped["PullRequest"] = relationship(
         back_populates="review_runs",
+    )
+
+    reviews : Mapped[list["Review"]] = relationship(
+        back_populates="review_run",
+        cascade="all, delete-orphan",
     )

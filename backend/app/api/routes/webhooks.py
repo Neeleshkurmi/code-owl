@@ -98,15 +98,16 @@ async def github_webhook(
             "reason" : "Pull request has no diff",
         }
 
-    review_run = await review_run_service.create_run(
+    review_run, created = await review_run_service.create_run(
         db=db,
         pull_request_id=pull_request.id,
         commit_sha=event.pull_request.head.sha,
     )
 
-    await review_job_service.enqueue(
-        review_run_id=review_run.id,
-    )
+    if created :
+        await review_job_service.enqueue(
+            review_run_id=review_run.id,
+        )
 
     response =  {
         "received": True,
@@ -114,6 +115,7 @@ async def github_webhook(
         "action": event.action,
         "pull_request_id": pull_request.id,
         "review_run_id" : review_run.id,
+        "review_run_created" : created,
     }
 
     print(response)

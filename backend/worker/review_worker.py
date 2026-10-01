@@ -46,7 +46,7 @@ async def process_review_run(
         )
         return
 
-    pull_request = await pull_request_repository.get_by_github_id(
+    pull_request = await pull_request_repository.get_by_id(
         db,
         review_run.pull_request_id,
     )
@@ -78,6 +78,7 @@ async def process_review_run(
         await review_service.save_review(
             db=db,
             pull_request_id=pull_request.id,
+            review_run_id=review_run.id,
             review_result=review_result,
         )
 

@@ -1,3 +1,5 @@
+from unittest import result
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -28,6 +30,21 @@ class ReviewRunRepository:
         result = await db.execute(
             select(ReviewRun).where(
                 ReviewRun.id == review_run_id
+            )
+        )
+
+        return result.scalar_one_or_none()
+
+    async def get_by_pull_request_and_commit(
+            self,
+            db : AsyncSession,
+            pull_request_id : int,
+            commit_sha : str,
+    ) -> ReviewRun | None : 
+        result = await db.execute(
+            select(ReviewRun).where(
+                ReviewRun.pull_request_id == pull_request_id,
+                ReviewRun.commit_sha == commit_sha,
             )
         )
 
