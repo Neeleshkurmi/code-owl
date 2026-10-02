@@ -171,9 +171,15 @@ async def process_review_run(
             commit_sha=review_run.commit_sha,
         )
 
-        print(
-            f"GitHub review published: {github_response.get('id')}"
-        )
+        if github_response is None:
+            print(
+                "No new findings. No GitHub review published."
+            )
+        else:
+            print(
+                f"GitHub review published: "
+                f"{github_response.get('id')}"
+            )
 
         await review_run_service.mark_completed(
             db,

@@ -81,3 +81,49 @@ class GitHubClient :
         response.raise_for_status()
 
         return response.json()
+
+
+    async def get_pull_request_review_comments(
+        self,
+        owner: str,
+        repo: str,
+        pull_request_number: int,
+    ) -> list[dict]:
+
+        comments = []
+        page = 1
+
+        async with httpx.AsyncClient() as client:
+
+            while True:
+
+                url = (
+                    f"{self.base_url}/repos/"
+                    f"{owner}/{repo}/pulls/"
+                    f"{pull_request_number}/comments"
+                )
+
+                response = await client.get(
+                    url,
+                    headers=self.headers,
+                    params={
+                        "per_page": 100,
+                        "page": page,
+                    },
+                )
+
+                response.raise_for_status()
+
+                page_comments = response.json()
+
+                if not page_comments:
+                    break
+
+                comments.extend(page_comments)
+
+                if len(page_comments) < 100:
+                    break
+
+                page += 1
+
+        return comments
