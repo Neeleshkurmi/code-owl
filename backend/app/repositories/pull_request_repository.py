@@ -12,7 +12,7 @@ class PullRequestRepository:
         pull_request_id: int,
     ) -> PullRequest | None:
 
-        print("Fetching PullRequest by internal ID")
+        print("Fetching PullRequest by internal ID", end='\n\n')
         result = await db.execute(
             select(PullRequest).where(
                 PullRequest.id == pull_request_id

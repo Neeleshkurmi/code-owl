@@ -4,8 +4,7 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from app.db.database import Base
-from app.models.repository import Repository
-from app.models.pull_request import PullRequest
+from app.models.github_installation import GitHubInstallation
 from app.models.repository import Repository
 from app.models.pull_request import PullRequest
 from app.models.review import Review

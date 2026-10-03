@@ -17,8 +17,16 @@ from app.services.review_job_service import ReviewJobService
 from app.core.github_client import GitHubClient
 from app.repositories.repository_repository import RepositoryRepository
 from app.services.github_review_service import GitHubReviewService
+from app.core.github_app import GitHubAppAuth
+from app.core.github_client import GitHubClient
 
 review_job_service = ReviewJobService()
+
+github_auth_app = GitHubAppAuth()
+
+github_client = GitHubClient(
+    github_app_auth=github_auth_app
+)
 
 review_run_repository = ReviewRunRepository()
 pull_request_repository = PullRequestRepository()
@@ -36,7 +44,7 @@ code_review_service = CodeReviewService()
 repository_repository = RepositoryRepository()
 
 github_review_service = GitHubReviewService(
-    github_client=GitHubClient(),
+    github_client=github_client
 )
 
 
@@ -94,7 +102,7 @@ async def process_review_run(
     db: AsyncSession,
     review_run_id: int,
 ):
-    print("calling review_run repository to get review run")
+    print("calling review_run repository to get review run", end='\n\n')
     review_run = await review_run_repository.get_by_id(
         db,
         review_run_id,
@@ -102,11 +110,12 @@ async def process_review_run(
 
     if review_run is None:
         print(
-            f"ReviewRun {review_run_id} not found"
+            f"ReviewRun {review_run_id} not found",
+            end='\n\n'
         )
         return
 
-    print("calling pull request get by id --> pull_request_id")
+    print("calling pull request get by id --> pull_request_id", end='\n\n')
     pull_request = await pull_request_repository.get_by_id(
         db,
         review_run.pull_request_id,
@@ -121,7 +130,7 @@ async def process_review_run(
         return
 
     try:
-        print("marking the review as running - > ")
+        print("marking the review as running - > ", end='\n\n')
         await review_run_service.mark_running(
             db,
             review_run,
@@ -132,14 +141,14 @@ async def process_review_run(
                 "Pull request has no diff"
             )
 
-        print("calling the code_review_service to get review_diff with the help of llm - > ")
+        print("calling the code_review_service to get review_diff with the help of llm - > ", end='\n\n')
 
         review_result = await code_review_service.review_diff(
             pull_request.diff
         )
 
 
-        print("saving the review result in db -> ")
+        print("saving the review result in db -> ", end='\n\n')
         await review_service.save_review(
             db=db,
             pull_request_id=pull_request.id,
@@ -149,10 +158,10 @@ async def process_review_run(
 
         # GitHub publishing comes here.
 
-        print("AI review completed")
-        print(f"Findings: {len(review_result.findings)}")
+        print("AI review completed", end='\n\n')
+        print(f"Findings: {len(review_result.findings)}", end='\n\n')
 
-        print("Loading repository...")
+        print("Loading repository...", end='\n\n')
 
         repository = await repository_repository.get_by_id(
             db,
@@ -162,9 +171,10 @@ async def process_review_run(
         if repository is None:
             raise ValueError("Repository not found")
 
-        print("Publishing review to GitHub...")
+        print("Publishing review to GitHub...", end='\n\n')
 
         github_response = await github_review_service.publish_review(
+            db=db,
             repository=repository,
             pull_request=pull_request,
             review_result=review_result,
@@ -173,12 +183,12 @@ async def process_review_run(
 
         if github_response is None:
             print(
-                "No new findings. No GitHub review published."
+                "No new findings. No GitHub review published.", end='\n\n'
             )
         else:
             print(
                 f"GitHub review published: "
-                f"{github_response.get('id')}"
+                f"{github_response.get('id')}", end='\n\n'
             )
 
         await review_run_service.mark_completed(
@@ -187,7 +197,7 @@ async def process_review_run(
         )
 
         print(
-            f"ReviewRun {review_run_id} completed"
+            f"ReviewRun {review_run_id} completed", end='\n\n'
         )
 
     except Exception as error:
@@ -201,7 +211,7 @@ async def process_review_run(
         )
 
         print(
-            f"ReviewRun {review_run_id} failed: {error}"
+            f"ReviewRun {review_run_id} failed: {error}", end='\n\n'
         )
 async def worker():
 

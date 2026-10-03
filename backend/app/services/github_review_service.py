@@ -5,9 +5,12 @@ from app.models.pull_request import PullRequest
 from app.models.repository import Repository
 from app.schemas.review import ReviewResult
 from app.services.diff_parser import DiffParser
+from app.repositories.github_installation_repository import GitHubInstallationRepository
 
 
 AI_REVIEW_MARKER = "<!-- ai-pr-review -->"
+
+github_installation_repository = GitHubInstallationRepository()
 
 
 class GitHubReviewService:
@@ -92,6 +95,7 @@ class GitHubReviewService:
 
     async def publish_review(
         self,
+        db,
         repository: Repository,
         pull_request: PullRequest,
         review_result: ReviewResult,
@@ -102,12 +106,24 @@ class GitHubReviewService:
             pull_request.diff or ""
         )
 
+        installation = await github_installation_repository.get_by_id(
+            db=db,
+            installation_id=repository.installation_id,
+        )
+
+        if installation is None:
+            raise RuntimeError(
+                f"GitHub installation not found for repository "
+                f"{repository.id}: {repository.installation_id}"
+            )
+
         existing_comments = (
             await self.github_client
             .get_pull_request_review_comments(
                 owner=repository.owner,
                 repo=repository.name,
                 pull_request_number=pull_request.number,
+                installation_id=installation.github_installation_id,
             )
         )
 
@@ -206,4 +222,5 @@ class GitHubReviewService:
             commit_sha=commit_sha,
             body=summary,
             comments=comments,
+            installation_id=installation.github_installation_id,
         )

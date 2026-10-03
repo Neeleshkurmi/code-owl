@@ -22,10 +22,10 @@ class PullRequestService:
 
     async def process_pull_request_event(
         self,
-        db: AsyncSession,
-        event: GitHubPullRequestEvent,
+        db,
+        event,
+        installation_id : int,
     ):
-
         supported_actions = {
             "opened",
             "reopened",
@@ -38,19 +38,21 @@ class PullRequestService:
         github_repository = event.repository
         github_pr = event.pull_request
 
-        diff = await self.github_client.get_pull_request_diff(
-            owner=github_repository.owner.login,
-            repo=github_repository.name,
-            pull_request_number=github_pr.number,
-        )
-
         repository = await self.repository_repository.get_or_create(
             db=db,
+            installation_id=installation_id,
             github_repo_id=github_repository.id,
             name=github_repository.name,
             full_name=github_repository.full_name,
             owner=github_repository.owner.login,
             url=github_repository.html_url,
+        )
+
+        diff = await self.github_client.get_pull_request_diff(
+            installation_id=event.installation.id,
+            owner=github_repository.owner.login,
+            repo=github_repository.name,
+            pull_request_number=github_pr.number,
         )
 
         existing_pr = await self.pull_request_repository.get_by_github_pr_id(
@@ -59,7 +61,6 @@ class PullRequestService:
         )
 
         if existing_pr is None:
-
             pull_request = PullRequest(
                 github_pr_id=github_pr.id,
                 repository_id=repository.id,

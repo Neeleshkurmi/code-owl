@@ -8,10 +8,10 @@ from app.models.repository import Repository
 class RepositoryRepository:
 
     async def create(
-            self,
-            db : AsyncSession, 
-            repository : Repository,
-    ) -> Repository : 
+        self,
+        db: AsyncSession,
+        repository: Repository,
+    ) -> Repository:
         db.add(repository)
 
         await db.commit()
@@ -20,45 +20,71 @@ class RepositoryRepository:
         return repository
 
     async def get_all(
-            self, 
-            db : AsyncSession,
-    ) -> list[Repository] : 
+        self,
+        db: AsyncSession,
+    ) -> list[Repository]:
         result = await db.execute(
             select(Repository)
         )
 
         return list(result.scalars().all())
 
-
-    async def get_by_id(self, db, repository_id):
+    async def get_by_id(
+        self,
+        db: AsyncSession,
+        repository_id: int,
+    ) -> Repository | None:
         result = await db.execute(
             select(Repository).where(
                 Repository.id == repository_id
             )
         )
+
         return result.scalar_one_or_none()
 
-    async def get_by_github_repo_id(self, db, repository_id):
-            result = await db.execute(
-                select(Repository).where(
-                    Repository.github_repo_id == repository_id
-                )
+    async def get_by_github_repo_id(
+        self,
+        db: AsyncSession,
+        github_repo_id: int,
+    ) -> Repository | None:
+        result = await db.execute(
+            select(Repository).where(
+                Repository.github_repo_id == github_repo_id
             )
-            return result.scalar_one_or_none()
+        )
+
+        return result.scalar_one_or_none()
+
+    async def get_by_installation_and_github_repo_id(
+        self,
+        db: AsyncSession,
+        installation_id: int,
+        github_repo_id: int,
+    ) -> Repository | None:
+        result = await db.execute(
+            select(Repository).where(
+                Repository.installation_id == installation_id,
+                Repository.github_repo_id == github_repo_id,
+            )
+        )
+
+        return result.scalar_one_or_none()
 
     async def get_or_create(
-    self,
-    db: AsyncSession,
-    github_repo_id: int,
-    name: str,
-    full_name: str,
-    owner: str,
-    url: str,
-) -> Repository:
+        self,
+        db: AsyncSession,
+        installation_id: int,
+        github_repo_id: int,
+        name: str,
+        full_name: str,
+        owner: str,
+        url: str,
+    ) -> Repository:
 
-        existing = await self.get_by_github_repo_id(
-            db,
-            github_repo_id,
+        existing = await self.get_by_installation_and_github_repo_id(
+            db=db,
+            installation_id=installation_id,
+            github_repo_id=github_repo_id,
         )
 
         if existing is not None:
@@ -66,6 +92,7 @@ class RepositoryRepository:
 
         repository = Repository(
             github_repo_id=github_repo_id,
+            installation_id=installation_id,
             name=name,
             full_name=full_name,
             owner=owner,
@@ -78,9 +105,10 @@ class RepositoryRepository:
                 await db.flush()
 
         except IntegrityError:
-            existing = await self.get_by_github_repo_id(
-                db,
-                github_repo_id,
+            existing = await self.get_by_installation_and_github_repo_id(
+                db=db,
+                installation_id=installation_id,
+                github_repo_id=github_repo_id,
             )
 
             if existing is None:
@@ -92,5 +120,3 @@ class RepositoryRepository:
         await db.refresh(repository)
 
         return repository
-
-    

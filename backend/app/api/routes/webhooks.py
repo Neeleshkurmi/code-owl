@@ -14,6 +14,9 @@ from app.services.review_service import ReviewService
 from app.repositories.review_run_repository import ReviewRunRepository
 from app.services.review_run_service import ReviewRunService
 from app.services.review_job_service import ReviewJobService
+from app.core.github_app import GitHubAppAuth
+from app.repositories.github_installation_repository import GitHubInstallationRepository
+from app.services.github_installation_service import GitHubInstallationService
 
 
 
@@ -22,11 +25,23 @@ router = APIRouter(
     tags=["webhooks"],
 )
 
+github_app_auth = GitHubAppAuth()
+
+github_client = GitHubClient(
+    github_app_auth=github_app_auth,
+)
+
+github_installation_service = GitHubInstallationService(
+    repository=GitHubInstallationRepository(),
+    github_app_auth=github_app_auth,
+)
+
 pull_request_service = PullRequestService(
     pull_request_repository=PullRequestRepository(),
     repository_repository=RepositoryRepository(),
-    github_client=GitHubClient(),
+    github_client=github_client,
 )
+
 
 code_review_service = CodeReviewService()
 
@@ -78,9 +93,15 @@ async def github_webhook(
 
     event = GitHubPullRequestEvent.model_validate(data)
 
+    installation = await github_installation_service.get_or_create_installation(
+        db=db,
+        github_installation_id=event.installation.id,
+    )
+
     pull_request = await pull_request_service.process_pull_request_event(
-        db,
-        event,
+        db=db,
+        event=event,
+        installation_id=installation.id,
     )
 
     if pull_request is None:

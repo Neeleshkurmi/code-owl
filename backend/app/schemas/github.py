@@ -30,5 +30,28 @@ class GitHubPullRequestPayload(BaseModel):
 
 class GitHubPullRequestEvent(BaseModel):
     action: str
+    installation: GitHubInstallationPayload
     repository: GitHubRepositoryPayload
     pull_request: GitHubPullRequestPayload
+
+
+
+class GitHubInstallationPayload(BaseModel):
+    id: int
+
+
+class GitHubInstallationAccountPayload(BaseModel):
+    id: int
+    login: str
+    type: str
+
+
+class GitHubInstallationResponse(BaseModel):
+    id: int
+    account: GitHubInstallationAccount
+
+
+class GitHubInstallationAccount(BaseModel):
+    id: int
+    login: str
+    type: str
