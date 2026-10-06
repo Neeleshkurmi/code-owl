@@ -30,10 +30,12 @@ async def test_review(
     )
 
     pull_request_id = 1
+    review_run_id = 1
 
     await review_service.save_review(
         db=db,
         pull_request_id=pull_request_id,
+        review_run_id=review_run_id,
         review_result=result,
     )
 
