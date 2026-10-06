@@ -1,6 +1,10 @@
 from pydantic import BaseModel
 
 
+class GitHubInstallationPayload(BaseModel):
+    id: int
+
+
 class GitHubOwnerPayload(BaseModel):
     login: str
 
@@ -33,11 +37,6 @@ class GitHubPullRequestEvent(BaseModel):
     installation: GitHubInstallationPayload
     repository: GitHubRepositoryPayload
     pull_request: GitHubPullRequestPayload
-
-
-
-class GitHubInstallationPayload(BaseModel):
-    id: int
 
 
 class GitHubInstallationAccountPayload(BaseModel):
