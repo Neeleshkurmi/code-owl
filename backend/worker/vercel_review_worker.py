@@ -1,8 +1,12 @@
+from pydantic import BaseModel
 from vercel.queue import subscribe
 
 from app.db.database import AsyncSessionLocal
-
 from worker.review_processor import process_review_run
+
+
+class ReviewJobPayload(BaseModel):
+    review_run_id: int
 
 
 @subscribe(
@@ -11,12 +15,12 @@ from worker.review_processor import process_review_run
     retry_after=60,
     max_attempts=3,
 )
-async def process_review_job(message: dict) -> None:
+async def process_review_job(message: ReviewJobPayload) -> None:
 
-    review_run_id = message["review_run_id"]
+    review_run_id = message.review_run_id
 
     print(
-        f"Vercel Queue: processing ReviewRun {review_run_id}",
+        f"Processing ReviewRun {review_run_id}",
         flush=True,
     )
 
