@@ -11,17 +11,8 @@ class GitHubAppAuth:
     def __init__(self):
         self.app_id = settings.github_app_id
         self.base_url = settings.github_api_url
-
-        private_key_path = Path(
-            settings.github_app_private_key_path
-        )
-
-        if not private_key_path.exists():
-            raise FileNotFoundError(
-                f"GitHub App private key not found: {private_key_path}"
-            )
-
-        self.private_key = private_key_path.read_bytes()
+        formatted_key = settings.github_app_private_key.replace(r"\n", "\n")
+        self.private_key = formatted_key.encode()
 
     def generate_jwt(self) -> str:
         now = datetime.now(timezone.utc)

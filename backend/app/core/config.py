@@ -11,7 +11,7 @@ class Settings(BaseSettings) :
     github_webhook_secret : str
     github_api_url : str = "https://api.github.com"
     github_app_id : int
-    github_app_private_key_path : str
+    github_app_private_key : str
     openai_api_key : str
     openai_base_url : str
     redis_url : str
