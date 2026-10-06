@@ -45,12 +45,12 @@ class GitHubInstallationAccountPayload(BaseModel):
     type: str
 
 
-class GitHubInstallationResponse(BaseModel):
-    id: int
-    account: GitHubInstallationAccount
-
-
 class GitHubInstallationAccount(BaseModel):
     id: int
     login: str
     type: str
+
+
+class GitHubInstallationResponse(BaseModel):
+    id: int
+    account: GitHubInstallationAccount
