@@ -17,6 +17,7 @@ from app.services.review_job_service import ReviewJobService
 from app.core.github_app import GitHubAppAuth
 from app.repositories.github_installation_repository import GitHubInstallationRepository
 from app.services.github_installation_service import GitHubInstallationService
+from app.services.review_queue import get_review_job_service
 
 
 
@@ -53,7 +54,7 @@ review_run_service = ReviewRunService(
     repository=ReviewRunRepository(),
 )
 
-review_job_service = ReviewJobService()
+review_job_service = get_review_job_service()
 
 @router.post("/github")
 async def github_webhook(

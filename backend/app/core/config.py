@@ -15,6 +15,7 @@ class Settings(BaseSettings) :
     openai_api_key : str
     openai_base_url : str
     redis_url : str
+    review_queue_backend: str = "redis"
 
     model_config = SettingsConfigDict(
         env_file=Path(__file__).resolve().parent / "../../.env",

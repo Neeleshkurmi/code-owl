@@ -5,10 +5,14 @@ from app.core.redis import redis_client
 from app.models.review_run import ReviewRun
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.repositories.review_run_repository import ReviewRunRepository
 
 
 
 class ReviewJobService:
+
+    def __init__(self):
+        self.repository = ReviewRunRepository()
 
     QUEUE_NAME = "review_jobs"
     PROCESSING_QUEUE_NAME = "review_jobs_processing"
