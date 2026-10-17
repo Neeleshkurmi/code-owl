@@ -10,6 +10,9 @@ from app.models.pull_request import PullRequest
 from app.models.review import Review
 from app.models.review_findings import ReviewFinding
 from app.models.review_run import ReviewRun
+from app.models.oauth_login_code import OAuthLoginCode
+from app.models.user import User
+from app.core.config import settings
 
 from alembic import context
 
@@ -46,7 +49,11 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    url = config.get_main_option("sqlalchemy.url")
+    url = config.get_main_option(
+        "sqlalchemy.url",
+        settings.alembic_database_url.replace("%", "%%"),
+    )
+
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -66,7 +73,10 @@ def run_migrations_online() -> None:
 
     """
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
+        {
+            **config.get_section(config.config_ini_section, {}),
+            "sqlalchemy.url": settings.alembic_database_url.replace("%", "%%"),
+        },
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )

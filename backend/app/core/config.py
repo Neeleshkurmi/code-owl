@@ -16,6 +16,15 @@ class Settings(BaseSettings) :
     openai_base_url : str
     redis_url : str
     review_queue_backend: str = "redis"
+    alembic_database_url: str
+    github_oauth_app_client_id: str
+    github_oauth_app_client_secret: str
+    jwt_secret_key: str
+    frontend_prod_url : str
+    frontend_dev_url : str
+    github_oauth_redirect_uri: str
+
+
 
     model_config = SettingsConfigDict(
         env_file=Path(__file__).resolve().parent / "../../.env",
